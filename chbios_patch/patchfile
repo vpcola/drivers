@@ -1,0 +1,57 @@
+diff --git os/hal/platforms/BCM2835/hal_lld.c os/hal/platforms/BCM2835/hal_lld.c
+index d55582c..a7ad0bb 100644
+--- os/hal/platforms/BCM2835/hal_lld.c
++++ os/hal/platforms/BCM2835/hal_lld.c
+@@ -99,6 +99,7 @@ CH_IRQ_HANDLER(IrqHandler)
+ 
+ #if HAL_USE_I2C
+   i2c_lld_serve_interrupt(&I2C0);
++  i2c_lld_serve_interrupt(&I2C1);
+ #endif
+ 
+ #if HAL_USE_SPI
+diff --git os/hal/platforms/BCM2835/i2c_lld.c os/hal/platforms/BCM2835/i2c_lld.c
+index 5d5dedd..7f4e6e1 100644
+--- os/hal/platforms/BCM2835/i2c_lld.c
++++ os/hal/platforms/BCM2835/i2c_lld.c
+@@ -40,6 +40,7 @@
+ /*===========================================================================*/
+ 
+ I2CDriver I2C0;
++I2CDriver I2C1;
+ 
+ /*===========================================================================*/
+ /* Driver local variables.                                                   */
+@@ -140,6 +141,9 @@ void i2c_lld_serve_interrupt(I2CDriver *i2cp) {
+ void i2c_lld_init(void) {
+   I2C0.device = BSC0_ADDR;
+   i2cObjectInit(&I2C0);
++
++  I2C1.device = BSC1_ADDR;
++  i2cObjectInit(&I2C1);
+ }
+ 
+ /**
+@@ -154,6 +158,10 @@ void i2c_lld_start(I2CDriver *i2cp) {
+   bcm2835_gpio_fnsel(GPIO0_PAD, GPFN_ALT0);
+   bcm2835_gpio_fnsel(GPIO1_PAD, GPFN_ALT0);
+ 
++  /* Set up GPIO pins for I2C on Rev. 2 boards*/
++  bcm2835_gpio_fnsel(GPIO2_PAD, GPFN_ALT0);
++  bcm2835_gpio_fnsel(GPIO3_PAD, GPFN_ALT0);
++
+   uint32_t speed = i2cp->config->ic_speed;
+   if (speed != 0 && speed != 100000)
+     i2cp->device->clockDivider = BSC_CLOCK_FREQ / i2cp->config->ic_speed;
+diff --git os/hal/platforms/BCM2835/i2c_lld.h os/hal/platforms/BCM2835/i2c_lld.h
+index ae9e489..ccfdc65 100644
+--- os/hal/platforms/BCM2835/i2c_lld.h
++++ os/hal/platforms/BCM2835/i2c_lld.h
+@@ -164,6 +164,7 @@ struct I2CDriver {
+ /*===========================================================================*/
+ 
+ extern I2CDriver I2C0;
++extern I2CDriver I2C1;
+ 
+ #ifdef __cplusplus
+ extern "C" {
