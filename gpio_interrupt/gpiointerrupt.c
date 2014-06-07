@@ -10,16 +10,16 @@
 // The GPIO_17 is usually not used (pin 11 on P5 pinout raspberry pi rev. 2 
 // board), we will use this to generate interrupt (rising edge). Refer  to
 // the raspberry pi spec sheets.
-#define GPIO_INT_GPIO17                17
+#define GPIO_INT_GPIO23                23 
  
 // We need to define what string will be displayed in /proc/interrupt. 
 // You may want to display the number of times our interrupt is called
 // via cat /proc/interrupt
-#define GPIO_INT_GPIO17_DESC           "GPIO_17 Interrupt switch"
+#define GPIO_INT_GPIO23_DESC           "GPIO23 Interrupt switch"
  
 // String below is not needed for now, it's needed for more complex cases. We
 // can ignore this for now.
-#define GPIO_INT_GPIO17_DEVICE_DESC    "GPIO17"
+#define GPIO_INT_GPIO23_DEVICE_DESC    "GPIO23"
  
  
 /****************************************************************************/
@@ -58,7 +58,7 @@ static void led_output_handler(unsigned long data)
 /****************************************************************************/
 /* IRQ handler                                                              */
 /****************************************************************************/
-static irqreturn_t r_irq_handler(int irq, void *dev_id, struct pt_regs *regs) 
+static irqreturn_t gpio23_irq_handler(int irq, void *dev_id, struct pt_regs *regs) 
 {
  
    unsigned long flags;
@@ -77,38 +77,38 @@ static irqreturn_t r_irq_handler(int irq, void *dev_id, struct pt_regs *regs)
  
  
 /****************************************************************************/
-/* This is our GPIO initialization function for configuring GPIO17 as our   */
+/* This is our GPIO initialization function for configuring GPIO23 as our   */
 /* interrupt source.                                                        */
 /****************************************************************************/
-void r_int_config(void) 
+void gpio23_int_config(void) 
 {
-	// We first need to request the GPIO base that we require GPIO17
+	// We first need to request the GPIO base that we require GPIO23
 	// to be exported or made available.   
-	if (gpio_request(GPIO_INT_GPIO17, GPIO_INT_GPIO17_DESC)) {
-		printk("%s: GPIO request faiure: %s\n", __FUNCTION__, GPIO_INT_GPIO17_DESC);
+	if (gpio_request(GPIO_INT_GPIO23, GPIO_INT_GPIO23_DESC)) {
+		printk("%s: GPIO request faiure: %s\n", __FUNCTION__, GPIO_INT_GPIO23_DESC);
 		return;
 	}
 	// After a successful request, we need to instruct the kernel that this
 	// pin will be used as an input source.
-	if (gpio_direction_input(GPIO_INT_GPIO17) < 0)
+	if (gpio_direction_input(GPIO_INT_GPIO23) < 0)
 	{
 		printk("%s: Error setting GPIO direction!\n", __FUNCTION__);
 		return;
 	}
 	
-	if ( (irq_any_gpio = gpio_to_irq(GPIO_INT_GPIO17)) < 0 ) 
+	if ( (irq_any_gpio = gpio_to_irq(GPIO_INT_GPIO23)) < 0 ) 
 	{
-		printk("%s: GPIO to IRQ mapping failure %s\n", __FUNCTION__, GPIO_INT_GPIO17_DESC);
+		printk("%s: GPIO to IRQ mapping failure %s\n", __FUNCTION__, GPIO_INT_GPIO23_DESC);
 		return;
 	}
  
    printk("%s: Mapped interrupt %d\n", __FUNCTION__, irq_any_gpio);
  
    if (request_irq(irq_any_gpio,
-                   (irq_handler_t ) r_irq_handler,
+                   (irq_handler_t ) gpio23_irq_handler,
                    IRQF_TRIGGER_RISING,
-                   GPIO_INT_GPIO17_DESC,
-                   GPIO_INT_GPIO17_DEVICE_DESC)) 
+                   GPIO_INT_GPIO23_DESC,
+                   GPIO_INT_GPIO23_DEVICE_DESC)) 
 	{
 		printk("%s: Irq Request failure\n", __FUNCTION__);
 		return;
@@ -121,10 +121,10 @@ void r_int_config(void)
 /****************************************************************************/
 /* This function releases interrupts.                                       */
 /****************************************************************************/
-void r_int_release(void) {
+void gpio23_int_release(void) {
  
-   free_irq(irq_any_gpio, GPIO_INT_GPIO17_DEVICE_DESC);
-   gpio_free(GPIO_INT_GPIO17);
+   free_irq(irq_any_gpio, GPIO_INT_GPIO23_DEVICE_DESC);
+   gpio_free(GPIO_INT_GPIO23);
  
    return;
 }
@@ -133,24 +133,24 @@ void r_int_release(void) {
 /****************************************************************************/
 /* Module init / cleanup block.                                             */
 /****************************************************************************/
-int r_init(void) {
+int gpio23_init(void) {
  
    printk(KERN_NOTICE "Hello !\n");
-   r_int_config();
+   gpio23_int_config();
  
    return 0;
 }
  
-void r_cleanup(void) {
+void gpio23_cleanup(void) {
    printk(KERN_NOTICE "Goodbye\n");
-   r_int_release();
+   gpio23_int_release();
  
    return;
 }
  
  
-module_init(r_init);
-module_exit(r_cleanup);
+module_init(gpio23_init);
+module_exit(gpio23_cleanup);
  
  
 /****************************************************************************/
