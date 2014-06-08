@@ -24,11 +24,11 @@ altbarvalue - The last update time from the driver (time barometer/alti-
     meter was updated) and the altimeter/barometric pressure value, 
     depending on the mode. The format of this is given in the example
     below:
-
+    
     <hours:min:sec:micro sec>|<altimeter/barometer value>
 
     Example:
-
+```
 pi@raspberrypi:~$ cat /sys/bus/i2c/drivers/mpl3115/1-0060/altbarmode
 B
 pi@raspberrypi:~$ cat /sys/bus/i2c/drivers/mpl3115/1-0060/altbarvalue
@@ -37,11 +37,11 @@ pi@raspberrypi:~$ echo 'A' > /sys/bus/i2c/drivers/mpl3115/1-0060/altbarmode
 pi@raspberrypi:~$ cat /sys/bus/i2c/drivers/mpl3115/1-0060/altbarvalue
 10:39:49:688672|19632
 pi@raspberrypi:~$
+```
 
-
-    Notice the difference in reading altimeter mode and barometer mode above.
-    Also note that the value is the raw readings of the sensor, user
-    applications must convert this value to meters/feet/etc.
+Notice the difference in reading altimeter mode and barometer mode above.
+Also note that the value is the raw readings of the sensor, user
+applications must convert this value to meters/feet/etc.
 
 tempvalue - The value of the temperature sensor. This value is a 16 bit value
     containing the numbers part in the MSB, and the decimal part in the LSB.
@@ -49,6 +49,7 @@ tempvalue - The value of the temperature sensor. This value is a 16 bit value
     applications must convert this value to Fahrenheit and to Celcuius 
     using the formula:
 
+```
     double fahrenheit = 0;
 
     MSB = (value >> 8) & 0xFF;
@@ -57,7 +58,7 @@ tempvalue - The value of the temperature sensor. This value is a 16 bit value
     LSB = (LSB > 99) (LSB / 1000) : (LSB / 100);
    
     fahrenheit = MSB + LSB;
-
+```
 
 Right now only the last read values are taken by this driver, theres currently
 no kernel FIFO to store all the values when an interrupt is triggered, what was
