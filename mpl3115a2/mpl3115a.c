@@ -179,8 +179,8 @@ static ssize_t get_temp_value(struct device *dev,
     struct tm tm_lr;
     struct i2c_client * client = to_i2c_client(dev);
     struct mpl3115_data * data = i2c_get_clientdata(client);
-    int temp_valmsb;
-    int temp_vallsb;
+    int temp_valmsb, temp_vallsb;
+    bool isneg = false;
 
 
     // We print the last time the value was read 
@@ -189,13 +189,19 @@ static ssize_t get_temp_value(struct device *dev,
     // Convert the temperature data to display in 
     // decimal
     temp_valmsb = (data->tempval >> 8 ) & 0xFF;
+        isneg = (temp_valmsb > 0x7F);
+    // If negative, get the 2's complement
+    if (isneg)
+        temp_valmsb = ~temp_valmsb + 1;
+
     temp_vallsb = ((data->tempval & 0xFF) * 100) >> 8;
 
-    return sprintf(buf, "%d:%d:%d:%ld|%d.%02d\n", 
+    return sprintf(buf, "%d:%d:%d:%ld|%c%d.%02d\n", 
         tm_lr.tm_hour, 
         tm_lr.tm_min, 
         tm_lr.tm_sec, 
         data->last_update_time.tv_usec, 
+        (isneg) ? '-':'+',
         temp_valmsb,
         temp_vallsb);
 }
@@ -220,6 +226,7 @@ static irqreturn_t gpio17_isr(int irq, void * dev_id)
     unsigned char buff[100];
     uint32_t temp_value, alt_value, len;
     uint32_t temp_valmsb, temp_vallsb;
+    bool isneg = false;
 
     // Retrieve data from the device, update the client data
     // and the last time read
@@ -240,15 +247,22 @@ static irqreturn_t gpio17_isr(int irq, void * dev_id)
         // Push the temperature value into our fifo
         time_to_tm(data->last_update_time.tv_sec, 0, &tm_lr);
 
+
         temp_valmsb = (temp_value >> 8) & 0xFF;
+        isneg = (temp_valmsb > 0x7F);
+        // If negative, get the 2's complement
+        if (isneg)
+            temp_valmsb = ~temp_valmsb + 1;
+
         temp_vallsb = ((temp_value & 0xFF) * 100) >> 8;
 
 
-        len = sprintf(buff, "%02d:%02d:%02d:%ld|%d.%02d|%d\n", 
+        len = sprintf(buff, "%02d:%02d:%02d:%ld|%c%d.%02d|%d\n", 
             tm_lr.tm_hour, 
             tm_lr.tm_min, 
             tm_lr.tm_sec, 
             data->last_update_time.tv_usec, 
+            (isneg) ? '-':'+',
             temp_valmsb,
             temp_vallsb,
             alt_value
