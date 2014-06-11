@@ -1,1 +1,0 @@
-cmd_/opt/cross/raspberry/module_source/drivers/mpl3115a2/mpl3115.o := /opt/cross/raspberry/gcc/bin/arm-linux-gnueabihf-ld -EL    -r -o /opt/cross/raspberry/module_source/drivers/mpl3115a2/mpl3115.o /opt/cross/raspberry/module_source/drivers/mpl3115a2/bartemp.o /opt/cross/raspberry/module_source/drivers/mpl3115a2/mpl3115a.o 
